@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Jeu d'Échecs IA - Stax.fun</title>
-    <!-- Biblioteque Chess.js (CDN minifié compatible iFrame) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <style>
         html, body {
@@ -15,8 +14,6 @@
             overflow: hidden !important;
             margin: 0 !important;
             padding: 0 !important;
-        }
-        * {
             box-sizing: border-box;
             touch-action: manipulation;
         }
@@ -29,11 +26,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            margin: 0;
             padding: 4px;
-            width: 480px;
-            height: 360px;
-            overflow: hidden;
         }
 
         h1 { 
@@ -78,7 +71,7 @@
 
         .player-info {
             width: 100%;
-            max-width: 240px;
+            max-width: 220px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -97,13 +90,12 @@
         .adv-user { color: #a6e3a1; background-color: rgba(166, 227, 161, 0.15); }
         .adv-ai { color: #f38ba8; background-color: rgba(243, 139, 168, 0.15); }
 
-        /* Agencement principal en colonnes (Échiquier à gauche, Infos/État à droite) */
         .main-container {
             display: flex;
             flex-direction: row;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
             width: 100%;
             flex: 1;
         }
@@ -113,22 +105,22 @@
             flex-direction: column;
             align-items: center;
             justify-content: space-around;
-            height: 100%;
+            height: 230px;
         }
 
         #board-container {
             position: relative;
-            width: 230px;
-            height: 230px;
+            width: 232px;
+            height: 232px;
             flex-shrink: 0;
         }
 
         #board {
-            width: 100%;
-            height: 100%;
+            width: 232px;
+            height: 232px;
             display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            grid-template-rows: repeat(8, 1fr);
+            grid-template-columns: repeat(8, 29px);
+            grid-template-rows: repeat(8, 29px);
             border: 2px solid #45475a;
             border-radius: 4px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
@@ -136,10 +128,12 @@
         }
 
         .square {
+            width: 29px;
+            height: 29px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 22px;
+            font-size: 20px;
             cursor: pointer;
             user-select: none;
             position: relative;
@@ -153,8 +147,8 @@
         .possible-move::after {
             content: '';
             position: absolute;
-            width: 35%;
-            height: 35%;
+            width: 30%;
+            height: 30%;
             background-color: rgba(0, 0, 0, 0.22);
             border-radius: 50%;
             pointer-events: none;
@@ -163,8 +157,8 @@
         .possible-capture::after {
             content: '';
             position: absolute;
-            width: 85%;
-            height: 85%;
+            width: 80%;
+            height: 80%;
             border: 3px solid rgba(0, 0, 0, 0.22);
             border-radius: 50%;
             box-sizing: border-box;
@@ -173,15 +167,15 @@
 
         .moving-piece {
             position: absolute;
-            font-size: 22px;
-            width: 28.75px;
-            height: 28.75px;
+            font-size: 20px;
+            width: 29px;
+            height: 29px;
             display: flex;
             justify-content: center;
             align-items: center;
             pointer-events: none;
             z-index: 100;
-            transition: all 0.25s ease-in-out;
+            transition: all 0.2s ease-in-out;
         }
 
         #promotion-modal {
@@ -208,9 +202,9 @@
         }
 
         .promotion-btn {
-            font-size: 24px;
-            width: 40px;
-            height: 40px;
+            font-size: 22px;
+            width: 36px;
+            height: 36px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -221,13 +215,12 @@
         }
 
         #status {
-            margin-top: 2px;
             font-size: 11px;
             font-weight: bold;
             color: #f9e2af;
             text-align: center;
             background: #252536;
-            padding: 3px 8px;
+            padding: 4px 8px;
             border-radius: 4px;
             width: 100%;
         }
@@ -285,6 +278,8 @@
         let searchEndTime = 0;
         let searchTimedOut = false;
         let pendingPromotion = null;
+
+        const SQUARE_SIZE = 29;
 
         const PIECE_SYMBOLS = {
             'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
@@ -442,10 +437,7 @@
         function getSquarePos(square) {
             const col = square.charCodeAt(0) - 97;
             const row = 8 - parseInt(square[1]);
-            const boardEl = document.getElementById('board');
-            const rect = boardEl.getBoundingClientRect();
-            const squareSize = rect.width / 8;
-            return { left: col * squareSize, top: row * squareSize, size: squareSize };
+            return { left: col * SQUARE_SIZE, top: row * SQUARE_SIZE };
         }
 
         function animateMove(fromSquare, toSquare, symbol, isWhite, callback) {
@@ -464,8 +456,6 @@
             pieceEl.style.textShadow = isWhite ? '0 0 2px #000' : 'none';
             pieceEl.style.left = `${startPos.left}px`;
             pieceEl.style.top = `${startPos.top}px`;
-            pieceEl.style.width = `${startPos.size}px`;
-            pieceEl.style.height = `${startPos.size}px`;
 
             boardContainer.appendChild(pieceEl);
 
@@ -478,7 +468,7 @@
                 pieceEl.remove();
                 isAnimating = false;
                 callback();
-            }, 250);
+            }, 200);
         }
 
         function updateMaterialUI() {
@@ -664,19 +654,10 @@
             }
 
             if (!move) {
-                const times = {
-                    1: 1000,
-                    2: 2000,
-                    3: 3000,
-                    4: 3500,
-                    5: 4000,
-                    6: 4500
-                };
-
+                const times = { 1: 1000, 2: 2000, 3: 3000, 4: 3500, 5: 4000, 6: 4500 };
                 if (times[aiLevel]) {
                     move = findBestMoveTimed(times[aiLevel]);
                 }
-
                 if (!move) {
                     const moves = game.moves({ verbose: true });
                     if (moves.length > 0) {
