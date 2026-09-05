@@ -14,6 +14,9 @@
             overflow: hidden !important;
             margin: 0 !important;
             padding: 0 !important;
+        }
+
+        * {
             box-sizing: border-box;
             touch-action: manipulation;
         }
@@ -26,7 +29,11 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
+            margin: 0;
             padding: 4px;
+            width: 480px;
+            height: 360px;
+            overflow: hidden;
         }
 
         h1 { 
@@ -71,7 +78,7 @@
 
         .player-info {
             width: 100%;
-            max-width: 220px;
+            max-width: 240px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -95,7 +102,7 @@
             flex-direction: row;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
             width: 100%;
             flex: 1;
         }
@@ -105,7 +112,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: space-around;
-            height: 232px;
+            height: 100%;
         }
 
         #board-container {
@@ -117,18 +124,29 @@
             border-radius: 4px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             background-color: #1e1e2e;
+            overflow: hidden;
         }
 
-        .square {
-            position: absolute;
+        #board {
+            width: 232px;
+            height: 232px;
+            border-collapse: collapse;
+            table-layout: fixed;
+            margin: 0;
+            padding: 0;
+        }
+
+        #board td {
             width: 29px;
             height: 29px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            padding: 0;
+            margin: 0;
+            text-align: center;
+            vertical-align: middle;
             font-size: 20px;
             cursor: pointer;
             user-select: none;
+            position: relative;
         }
 
         .white-square { background-color: #f0d9b5; }
@@ -139,8 +157,11 @@
         .possible-move::after {
             content: '';
             position: absolute;
-            width: 30%;
-            height: 30%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: 10px;
             background-color: rgba(0, 0, 0, 0.22);
             border-radius: 50%;
             pointer-events: none;
@@ -149,8 +170,11 @@
         .possible-capture::after {
             content: '';
             position: absolute;
-            width: 80%;
-            height: 80%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 22px;
+            height: 22px;
             border: 3px solid rgba(0, 0, 0, 0.22);
             border-radius: 50%;
             box-sizing: border-box;
@@ -207,12 +231,13 @@
         }
 
         #status {
+            margin-top: 2px;
             font-size: 11px;
             font-weight: bold;
             color: #f9e2af;
             text-align: center;
             background: #252536;
-            padding: 4px 8px;
+            padding: 3px 8px;
             border-radius: 4px;
             width: 100%;
         }
@@ -234,6 +259,7 @@
 
     <div class="main-container">
         <div id="board-container">
+            <table id="board"></table>
             <div id="promotion-modal">
                 <div class="promotion-options">
                     <div class="promotion-btn" onclick="selectPromotion('q')">♕</div>
@@ -495,52 +521,49 @@
         }
 
         function renderBoard() {
-            const boardContainer = document.getElementById('board-container');
-            
-            // Supprimer uniquement les anciennes cases, garder le modal
-            boardContainer.querySelectorAll('.square').forEach(el => el.remove());
-
+            const boardEl = document.getElementById('board');
+            boardEl.innerHTML = '';
             const boardState = game.board();
 
             for (let r = 0; r < 8; r++) {
+                const tr = document.createElement('tr');
                 for (let c = 0; c < 8; c++) {
-                    const squareEl = document.createElement('div');
+                    const td = document.createElement('td');
                     const squareName = String.fromCharCode(97 + c) + (8 - r);
                     const isWhite = (r + c) % 2 === 0;
 
-                    squareEl.className = `square ${isWhite ? 'white-square' : 'black-square'}`;
-                    squareEl.dataset.square = squareName;
-                    squareEl.style.left = `${c * SQUARE_SIZE}px`;
-                    squareEl.style.top = `${r * SQUARE_SIZE}px`;
+                    td.className = `square ${isWhite ? 'white-square' : 'black-square'}`;
+                    td.dataset.square = squareName;
 
                     if (selectedSquare === squareName) {
-                        squareEl.classList.add('selected');
+                        td.classList.add('selected');
                     }
 
                     if (lastMove && (lastMove.from === squareName || lastMove.to === squareName)) {
-                        squareEl.classList.add('last-move');
+                        td.classList.add('last-move');
                     }
 
                     const moveInfo = possibleMoves.find(m => m.to === squareName);
                     if (moveInfo) {
                         if (moveInfo.captured) {
-                            squareEl.classList.add('possible-capture');
+                            td.classList.add('possible-capture');
                         } else {
-                            squareEl.classList.add('possible-move');
+                            td.classList.add('possible-move');
                         }
                     }
 
                     const piece = boardState[r][c];
                     if (piece) {
                         const symbolKey = piece.color === 'w' ? piece.type.toUpperCase() : piece.type;
-                        squareEl.textContent = PIECE_SYMBOLS[symbolKey];
-                        squareEl.style.color = piece.color === 'w' ? '#ffffff' : '#000000';
-                        squareEl.style.textShadow = piece.color === 'w' ? '0 0 2px #000' : 'none';
+                        td.textContent = PIECE_SYMBOLS[symbolKey];
+                        td.style.color = piece.color === 'w' ? '#ffffff' : '#000000';
+                        td.style.textShadow = piece.color === 'w' ? '0 0 2px #000' : 'none';
                     }
 
-                    squareEl.addEventListener('click', () => handleClick(squareName));
-                    boardContainer.appendChild(squareEl);
+                    td.addEventListener('click', () => handleClick(squareName));
+                    tr.appendChild(td);
                 }
+                boardEl.appendChild(tr);
             }
             updateMaterialUI();
             updateStatusText();
